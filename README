@@ -1,0 +1,196 @@
+.==============================================================================.
+#                                   DrawTime                                   #
+*==============================================================================*
+
+DrawTime is a simple editor and renderer for timing diagrams. It takes a plain
+text description of a diagram and draws it as a chart which can then be saved or
+printed.
+
+The actual DrawTime application also provides a GUI to edit the timing code in a
+syntax-highlighted editor and preview the changes live.
+
+An example diagram description is supplied in data/example.dt.
+
+You can download the latest source code and binary distributions from:
+  https://github.com/max99x/drawtime/
+
+Screenshots are available at:
+  http://max99x.com/school/drawtime
+
+.==============================================================================.
+#                                 Dependencies                                 #
+*==============================================================================*
+
+If you are using the Windows binary distribution, you should not need to worry
+about dependencies. However, for source distributions you will need to have
+Python 3.1 or later, as well as PyQT 4.8 or later. You can run the program by
+specifying its directory to the Python 3 interpreter or executing __main__.py.
+
+.==============================================================================.
+#                                    License                                   #
+*==============================================================================*
+
+The code is licensed under the MIT license.
+
+.==============================================================================.
+#                             Language Reference                               #
+*==============================================================================*
+
+DrawTime uses a simple language to describe the diagrams to be drawn. You should
+be able to deduce the syntax by editing the supplied example.dt in the editor
+and looking at the results (both the highlighting and the diagram). Below is a
+full reference of the language.
+
+Block Structure
+===============
+  A DrawTime file is divided into "blocks", either "basic" blocks (time, style)
+  or "signal" blocks (bus, line, clock). Basic blocks define global properties
+  while signal blocks define specific signals. Signal blocks are rendered in the
+  order in which they are specified in the file.
+
+  Each block starts with a header line and is followed by one or more "property"
+  or "change" lines. For basic blocks a header line is simply the type of the
+  block followed by a colon. For signal blocks, it is the type of the block,
+  followed by whitespace, then the signal label, and finally a colon. Below are
+  some valid block header lines:
+    bus:
+    time   :
+    line X:
+    line    Y/!Z:
+    bus !@#:$%^&*()_+::
+    clock Hello World:
+
+  Signal labels can contain any characters, however two characters have special
+  meaning. An initial exclamation mark (!) is hidden and results in the label
+  having a line drawn over it. In addition, if only part of the label should
+  have an overline, a forward slash (/) can be used to divide the part that is
+  to have an overline from the rest. Examples:
+    ABCD        -> will draw ABCD without any lines.
+    !ABCD       -> will draw ABCD with a line over all of it.
+    AB!CD       -> will draw AB!CD without any lines.
+    !AB/CD      -> will draw AB/CD with a line over AB.
+    AB/!CD      -> will draw AB/CD with a line over CD.
+    AB/ !CD      -> will draw AB/ !CD without any lines.
+    !AB/!CD     -> will draw AB/CD with a line over both AB and CD
+    !AB/!CD/!EF -> will draw AB/CD/!EF with a line over AB and CD.
+
+Property Lines
+==============
+  Property lines specify the value of a particular property for the block in
+  which they occur. Property lines can occur in both basic and signal blocks.
+  Each block understands only a few properties, as specified in the Block
+  Properties section. A property line is of the syntax "property = value".
+  Examples of valid property lines:
+    start = Z
+    width=800
+    font_family = Times New Roman
+    color =    ff00ff
+
+Change Lines
+============
+  Change lines specify the value to which a line or bus signal change at a given
+  point in the timeline. Change lines are or the syntax "time -> value".
+  The values accepted by change lines of buses and lines are different, and are
+  explained in the Signal Values section.
+  Examples of valid change lines:
+    100 -> 0
+    123->?
+    -10-> Z
+    0 ->1
+    150 -> "0xBEEF"
+
+  A typical line or bus signal will define a start value, then a group of
+  changes at different points of time. The changes do not need to be
+  specified in any particular order, although using a chronological order is a
+  good habit to follow.
+
+  A valid line signal might look like:
+    line IO/!M:
+      start = ?
+      100 -> 0
+      200 -> Z
+      300 -> 1
+      400 -> Z
+
+  A valid bus signal might look like:
+    line IO/!M:
+      start = "Old"
+      250 -> Z
+      400 -> "New"
+      650 -> "Even \"Newer\""
+      800 -> ?
+
+Block Properties
+================
+  Each block type allows different properties. Below is the list of these for
+  each type.
+
+  Time
+  ----
+    start: The minimum time value displayed in the chart. For example, if start
+    is set to 20, and a signal changes at time 10, it will not be shown in the
+    diagram. This can be a negative value. Defaults to 0.
+
+    end: The maximum time value displayed in the chart. For example, if end is
+    set to 20, and a signal changes at time 30, it will not be shown in the
+    diagram. Defaults to 100.
+
+    step: If specified, the diagram is split into columns, each step time units
+    wide, labeled with T#, where # is the column number.
+
+    delay: The length of time it takes each signal to complete a value change.
+    Defaults to 10.
+
+  Style
+  -----
+    width: The width of the diagram in pixels. Defaults to 800.
+
+    height: The height of the diagram in pixels. Defaults to 600.
+
+    margin: The margin of the diagram in pixels. Defaults to 10.
+
+    font_size: The size of the fonts used in the diagram in points. Defaults
+    to 12.
+
+    font_family: The name of the font to be used in the diagram. Invalid values
+    will fall back to the default system font. Defaults to Times New Roman.
+
+    background: The color of the diagram's background, in RRGGBB format.
+    Defaults to FFFFFF (white).
+
+    foreground: The color of the diagram's lines and text, in RRGGBB format.
+    Defaults to 000000 (white).
+
+  Clock
+  -----
+    length: The length of the clock cycle in time units.
+
+    duty: The relative duty cycle of the clock. E.g. 0.2 will cause the clock to
+    remain in the 1 position for 20% of a full cycle, and in the 0 position for
+    80% of the cycle (assuming delay=0).
+
+    offset: The offset from which the clock begins ticking, in time units.
+
+  Line, Bus
+  ---------
+    start: The value of the line or bus before the first change takes effect.
+    See the Signal Values section for allowed values.
+
+Signal Values
+=============
+  Line signals accept the following values:
+    "0": Logical low.
+    "1": Logical high.
+    "?": Unkown (only valid as a start value).
+    "Z": Floating; i.e. high impedance.
+
+  Bus signals accept the following values:
+    "?": Unkown.
+    "Z": Floating; i.e. high impedance.
+    Arbitrary quoted strings (with any Python escapes).
+
+Notes
+=====
+  Lines whose first non-whitespace character is a hash mark ("#") are comments.
+
+  Everything in the language is case-sensitive.

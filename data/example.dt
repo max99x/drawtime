@@ -1,0 +1,60 @@
+# A simplified timing diagram of an Intel 8088 bus cycle.
+# Author: Max Shawabkeh
+# Date: October 22, 2010
+
+style:
+  width = 400
+  height = 550
+  margin = 10
+  font_size = 14
+  font_family = Arial
+  background = ffffff
+  foreground = 000000
+
+time:
+  step = 100
+  start = -25
+  end = 425
+  delay = 10
+
+clock CLK:
+  length = 100
+  offset = 5
+  duty = 0.333
+
+bus AD[0:7]:
+  start = ?
+  10 -> "A[0:7]"
+  140 -> Z
+  210 -> "D[0:7]"
+  340 -> Z
+
+bus A[8:19]:
+  start = ?
+  10 -> "Address"
+
+line ALE:
+  start = 0
+  10 -> 1
+  90 -> 0
+
+line !RD:
+  start = 1
+  140 -> 0
+  240 -> 1
+
+line !DEN:
+  start = 1
+  215 -> 0
+  350 -> 1
+
+line DT/!R:
+  start = ?
+  0 -> 0
+
+line IO/!M:
+  start = ?
+  0 -> 0
+
+line READY:
+  start = 1
