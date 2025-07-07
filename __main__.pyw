@@ -2,7 +2,7 @@
 """DrawTime - a tool to render timing diagrams from textual descriptions."""
 
 import sys
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 import parse
 import render
 import gui
@@ -57,7 +57,7 @@ def main():
   read and the second as the path where the output is to be stored. Note that
   the output file is silently overwritten.
   """
-  app = QtGui.QApplication(sys.argv)
+  app = QtWidgets.QApplication(sys.argv)
   app.setApplicationName('DrawTime')
 
   if len(sys.argv) == 1:

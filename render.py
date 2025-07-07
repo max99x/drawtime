@@ -1,7 +1,7 @@
 """A Qt renderer for timing diagrams."""
 
 import re
-from PyQt4 import QtGui,  QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 import model
 
 
@@ -296,7 +296,7 @@ class Renderer:
       new_pen.setStyle(QtCore.Qt.SolidLine)
 
     self.painter.setPen(new_pen)
-    self.painter.drawLine(x1, y1, x2, y2)
+    self.painter.drawLine(int(x1), int(y1), int(x2), int(y2))
 
     self.painter.setPen(old_pen)
     self.painter.setRenderHint(QtGui.QPainter.Antialiasing, False)

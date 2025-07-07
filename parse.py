@@ -327,5 +327,7 @@ def _parseSignalValue(value, signal_type, line_number, line_text):
         return value
       except SyntaxError:
         raise TimingSyntaxError('bus_value', (line_number, line_text))
+      except ValueError:
+        raise TimingSyntaxError('bus_value', (line_number, line_text))
   else:
     raise ValueError('Invalid signal type: ' + signal_type)

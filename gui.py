@@ -2,7 +2,7 @@
 
 import re
 import time
-from PyQt4 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui, QtWidgets
 import parse
 import render
 
@@ -30,7 +30,7 @@ PREVIEW_DELAY = 2
 PREVIEW_TIMER_RESOLUTION = 50
 
 
-class Editor(QtGui.QMainWindow):
+class Editor(QtWidgets.QMainWindow):
   """The main DrawTime editor window."""
 
   def __init__(self):
@@ -65,16 +65,12 @@ class Editor(QtGui.QMainWindow):
     self.live_preview_action = render_menu.addAction('&Live Editing')
     self.live_preview_action.setCheckable(True)
     self.live_preview_action.setShortcut('Ctrl+L')
-    self.connect(self.live_preview_action,
-                 QtCore.SIGNAL('toggled(bool)'),
-                 self.toggleLivePreview)
+    self.live_preview_action.toggled.connect(self.toggleLivePreview)
 
     self.delayed_preview_action = render_menu.addAction('&Delayed Editing')
     self.delayed_preview_action.setCheckable(True)
     self.delayed_preview_action.setShortcut('Ctrl+D')
-    self.connect(self.delayed_preview_action,
-                 QtCore.SIGNAL('toggled(bool)'),
-                 self.toggleDelayedPreview)
+    self.delayed_preview_action.toggled.connect(self.toggleDelayedPreview)
 
     # These are circularly-dependent. Make sure both are created.
     self.live_preview_action.setChecked(True)
@@ -100,10 +96,10 @@ class Editor(QtGui.QMainWindow):
 
     self.editor = TabbedTextEdit()
     self.editor.setFont(self.font)
-    self.editor.setLineWrapMode(QtGui.QTextEdit.NoWrap)
+    self.editor.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
     self.editor.setAcceptRichText(False)
 
-    self.error_selection = QtGui.QTextEdit.ExtraSelection()
+    self.error_selection = QtWidgets.QTextEdit.ExtraSelection()
     self.error_selection.format = QtGui.QTextCharFormat()
     self.error_selection.format.setBackground(ERROR_BACKGROUND)
     self.error_selection.format.setProperty(
@@ -113,29 +109,28 @@ class Editor(QtGui.QMainWindow):
     self.highlighter = Highlighter(self.editor)
 
     self.setCentralWidget(self.editor)
-    text_changed = QtCore.SIGNAL('textChanged()')
-    self.connect(self.editor, text_changed, self.markUnsaved)
-    self.connect(self.editor, text_changed, self.drawAutoPreview)
-    self.connect(self.editor, QtCore.SIGNAL('keyPressed()'), self.recordAction)
+    self.editor.textChanged.connect(self.markUnsaved)
+    self.editor.textChanged.connect(self.drawAutoPreview)
+    self.editor.keyPressed.connect(self.recordAction)
 
   def setupCanvas(self):
     """Creates the preview dock with a diagram drawing canvas."""
     self.canvas = Canvas()
-    self.dock = QtGui.QDockWidget('Diagram Preview')
+    self.dock = QtWidgets.QDockWidget('Diagram Preview')
     self.dock.setWidget(self.canvas)
     self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.dock)
 
   def setupSize(self):
     """Centers the main window and resize the dock to 45% width."""
-    screen = QtGui.QDesktopWidget().availableGeometry()
+    screen = QtWidgets.QDesktopWidget().availableGeometry()
 
-    self.resize(screen.width() * 0.66, screen.height() * 0.75)
+    self.resize(int(screen.width() * 0.66), int(screen.height() * 0.75))
 
     size = self.geometry()
-    self.move((screen.width() - size.width()) / 2,
-              (screen.height() - size.height()) / 2)
+    self.move((screen.width() - size.width()) // 2,
+              (screen.height() - size.height()) // 2)
 
-    self.canvas.resize(size.width() * 0.45, size.height())
+    self.canvas.resize(int(size.width() * 0.45), int(size.height()))
 
   def new(self):
     """Clears the editor and diagram dock for a new document.
@@ -380,8 +375,10 @@ class Editor(QtGui.QMainWindow):
       event.ignore()
 
 
-class TabbedTextEdit(QtGui.QTextEdit):
+class TabbedTextEdit(QtWidgets.QTextEdit):
   """A QTextEdit that handles tabs as spaces and follows indents."""
+
+  keyPressed = QtCore.pyqtSignal()
 
   def keyPressEvent(self, event):
     """Intercepts Tab and Enter key presses.
@@ -414,10 +411,11 @@ class TabbedTextEdit(QtGui.QTextEdit):
       self.insertPlainText('\n' + ' ' * spaces)
     else:
       super().keyPressEvent(event)
-    self.emit(QtCore.SIGNAL("keyPressed()"))
+      
+    self.keyPressed.emit()
 
 
-class Canvas(QtGui.QWidget):
+class Canvas(QtWidgets.QWidget):
   """A canvas drawn by the diagram renderer."""
 
   def __init__(self,  parent=None):
